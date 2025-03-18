@@ -7,6 +7,85 @@ import bm3d
 import cv2
 from PIL import ImageFilter
 
+def normalize_slice(slice_data):
+    """
+    Normalize slice data using 2nd and 98th percentiles.
+
+    Parameters:
+        slice_data (PIL.Image or np.ndarray): The input image or array.
+
+    Returns:
+        PIL.Image or np.ndarray: The normalized image or array.
+    """
+    # Convert PIL image to NumPy array if necessary
+    if isinstance(slice_data, Image.Image):
+        is_pil_image = True
+        slice_data = np.array(slice_data)
+    else:
+        is_pil_image = False
+    
+    # Calculate percentiles
+    p2 = np.percentile(slice_data, 2)
+    p98 = np.percentile(slice_data, 98)
+    
+    # Handle edge case where p98 == p2
+    if p98 == p2:
+        normalized = np.zeros_like(slice_data)  # Return a blank image
+    else:
+        # Clip the data to the percentile range
+        clipped_data = np.clip(slice_data, p2, p98)
+        
+        # Normalize to [0, 255] range
+        normalized = 255 * (clipped_data - p2) / (p98 - p2)
+    
+    # Convert to uint8
+    normalized = np.uint8(normalized)
+    
+    # Convert back to PIL image if the input was a PIL image
+    if is_pil_image:
+        return Image.fromarray(normalized)
+    else:
+        return normalized
+    
+def min_or_max_intensity_projection(slices, axis=0, return_as_img=True, method='max'):
+    """
+    Compute the maximum intensity projection (MIP) of a stack of slices.
+
+    Parameters:
+        slices (list of PIL.Image): List of images (slices) to compute MIP.
+        axis (int): Axis along which to compute the MIP (0 for z-axis).
+
+    Returns:
+        PIL.Image: The maximum intensity projection image.
+    """
+    # Convert PIL images to numpy arrays
+    slices_array = [np.array(img) for img in slices]
+    
+    # Stack the slices along the specified axis
+    stack = np.stack(slices_array, axis=axis)
+    
+    # Compute the maximum intensity projection
+    if method in ['max']:
+        mip = np.max(stack, axis=axis)
+    elif method in ['min']:
+        mip = np.min(stack, axis=axis)
+    else:
+        raise NotImplementedError()
+    
+    if return_as_img:
+        # Convert back to PIL image
+        return Image.fromarray(mip.astype(np.uint8))
+    else:
+        return mip
+    
+def minimum_intensity_projection(slices, axis=0, return_as_img=True, method='min'):
+    assert method in ['min'], "Only 'min' method is supported for minimum intensity projection."
+    return min_or_max_intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
+
+def maximum_intensity_projection(slices, axis=0, return_as_img=True, method='max'):
+    assert method in ['max'], "Only 'max' method is supported for minimum intensity projection."
+    return min_or_max_intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
+
 def load_image(image_path):
     """
     Load an image without applying any processing.
