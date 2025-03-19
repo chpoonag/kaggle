@@ -7,6 +7,8 @@ import bm3d
 import cv2
 from PIL import ImageFilter
 
+
+
 def normalize_slice(slice_data):
     """
     Normalize slice data using 2nd and 98th percentiles.
@@ -46,8 +48,8 @@ def normalize_slice(slice_data):
         return Image.fromarray(normalized)
     else:
         return normalized
-    
-def min_or_max_intensity_projection(slices, axis=0, return_as_img=True, method='max'):
+
+def intensity_projection(slices, axis=0, return_as_img=True, method='avg'):
     """
     Compute the maximum intensity projection (MIP) of a stack of slices.
 
@@ -69,22 +71,38 @@ def min_or_max_intensity_projection(slices, axis=0, return_as_img=True, method='
         mip = np.max(stack, axis=axis)
     elif method in ['min']:
         mip = np.min(stack, axis=axis)
+    elif method in ['avg', 'mean']:
+        mip = np.mean(stack, axis=axis)
     else:
         raise NotImplementedError()
     
+    mip = mip.astype(np.uint8)
     if return_as_img:
         # Convert back to PIL image
-        return Image.fromarray(mip.astype(np.uint8))
+        return Image.fromarray(mip)
     else:
         return mip
     
+def min_or_max_intensity_projection(slices, axis=0, return_as_img=True, method='max'):
+    """
+    Compute the maximum (or minimum) intensity projection (MIP) of a stack of slices.
+
+    Parameters:
+        slices (list of PIL.Image): List of images (slices) to compute MIP.
+        axis (int): Axis along which to compute the MIP (0 for z-axis).
+
+    Returns:
+        PIL.Image: The maximum intensity projection image.
+    """
+    intensity_projection(slices, axis=0, return_as_img=True, method=method)
+    
 def minimum_intensity_projection(slices, axis=0, return_as_img=True, method='min'):
     assert method in ['min'], "Only 'min' method is supported for minimum intensity projection."
-    return min_or_max_intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
+    return intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
 
 def maximum_intensity_projection(slices, axis=0, return_as_img=True, method='max'):
     assert method in ['max'], "Only 'max' method is supported for minimum intensity projection."
-    return min_or_max_intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
+    return intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
 
 def load_image(image_path):
     """
