@@ -104,6 +104,33 @@ def maximum_intensity_projection(slices, axis=0, return_as_img=True, method='max
     assert method in ['max'], "Only 'max' method is supported for minimum intensity projection."
     return intensity_projection(slices, axis=axis, return_as_img=return_as_img, method=method)
 
+class IntensityProjectionHelper:
+    def __init__(self, method, denoiser_kwargs={"radius": 3}, denoiser_type='gaussian_blur', normalize=True, denoise=True):
+        self.method = method
+        self.denoiser_kwargs = denoiser_kwargs
+        self.denoiser_type = denoiser_type
+        self.normalize = normalize
+        self.denoise = denoise
+        if denoiser_type in ['gaussian_blur']:
+            self.denoiser = Denoiser.denoise_gaussian_blur
+        else:
+            raise NotImplementedError()
+
+    def process(self, current_index: int, num_slices: int, loaded_images: list):
+        start = max(0, current_index - num_slices)
+        end = min(len(loaded_images), current_index + num_slices + 1)
+        
+        # Get the neighboring slices
+        slices = loaded_images[start:end]
+        
+        # Apply normalization and denoising to the slices
+        slices = [normalize_slice(s) if self.normalize else s for s in slices]
+        slices = [self.denoiser(s, **self.denoiser_kwargs) if self.denoise else s for s in slices]
+        
+        # Compute the maximum intensity projection
+        img = intensity_projection(slices, method=self.method)
+        return img
+
 def load_image(image_path):
     """
     Load an image without applying any processing.
