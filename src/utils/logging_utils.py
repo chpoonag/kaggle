@@ -2,6 +2,76 @@ import logging
 import sys
 import requests
 import warnings
+import datetime
+
+class TimestampedFile:
+    def __init__(self, file, original_stdout, enable_console_output=True):
+        self.file = file
+        self.original_stdout = original_stdout
+        self.enable_console_output = enable_console_output  # Option to enable/disable console output
+        self.buffer = ""  # Buffer to accumulate partial lines
+
+    def write(self, message):
+        # Accumulate the message in the buffer
+        self.buffer += message
+        
+        # Split the buffer into lines
+        lines = self.buffer.splitlines(keepends=True)
+        
+        # Process complete lines
+        for line in lines[:-1]:  # All lines except the last one
+            self._write_line(line)
+        
+        # Update the buffer with the last (possibly incomplete) line
+        self.buffer = lines[-1] if lines else ""
+
+    def _write_line(self, line):
+        # Add timestamp to the line
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_message = f"[{timestamp}] {line}"
+        
+        # Write to the file
+        self.file.write(log_message)
+        
+        # Write to the original stdout (console) if enabled
+        if self.enable_console_output:
+            self.original_stdout.write(log_message)
+
+    def flush(self):
+        # Flush any remaining data in the buffer
+        if self.buffer:
+            self._write_line(self.buffer)
+            self.buffer = ""
+        
+        # Flush the file and original stdout
+        self.file.flush()
+        if self.enable_console_output:
+            self.original_stdout.flush()
+
+def redirect_output_with_timestamps(log_file='output.log', enable_console_output=True):
+    '''
+    Logging the output of the script to a file with timestamps.
+    Args:
+        log_file (str): The path to the log file.
+        enable_console_output (bool): Whether to enable console output. Default is True.
+        
+    Returns:
+        None
+    
+    Example:
+        redirect_output_with_timestamps(log_file='output.log', enable_console_output=True)
+        print('Hello, World!')    # This will be logged to the file with a timestamp and also printed on the console.
+    '''
+    # Open the log file in write mode
+    log_file_obj = open(log_file, 'w')
+    
+    # Create a TimestampedFile object that wraps the log file and original stdout
+    timestamped_file = TimestampedFile(log_file_obj, sys.stdout, enable_console_output)
+    
+    # Redirect sys.stdout and sys.stderr to the TimestampedFile object
+    sys.stdout = timestamped_file
+    sys.stderr = timestamped_file
+
 
 def setup_logging(log_file, include_executed_command=True):
     """
