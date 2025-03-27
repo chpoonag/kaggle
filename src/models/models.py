@@ -4,7 +4,20 @@ import torch.nn.functional as F
 import numpy as np
 
 class MLP(nn.Module):
-    def __init__(self, dims, activation=nn.ReLU(), skip_connection=False):
+    def __init__(self, dims, activation=nn.ReLU(), skip_connection=False, activation_in_last_layer=True):
+        """
+        dims: list of tuples, where each tuple is a pair of input and output dimensions of a layer
+        activation: activation function to be used between layers
+        skip_connection: whether to use skip connection
+        activation_in_last_layer: whether to use activation in the last layer
+
+        Example:
+        dims = [(2, 3), (3, 4), (4, 1)]
+        activation = nn.ReLU()
+        skip_connection = False
+        activation_in_last_layer = False
+        mlp = MLP(dims, activation, skip_connection, activation_in_last_layer)
+        """
         super(MLP, self).__init__()
         layers = []
         skip_connection_layers = []
@@ -23,6 +36,7 @@ class MLP(nn.Module):
         self.activation_layer = activation
         self.skip_connection_layers = nn.ModuleList(skip_connection_layers) if skip_connection else None
         self._skip_connection = skip_connection
+        self._activation_in_last_layer = activation_in_last_layer
 
     def forward(self, x, **kwargs):
         xs_skip = []
@@ -33,7 +47,11 @@ class MLP(nn.Module):
                 xs_skip.append(_x_skip)
             
             x = layer(x)
-            x = self.activation_layer(x)
+            if i < len(self.layers) - 1:    # i.e. not the last layer
+                x = self.activation_layer(x)
+            elif self._activation_in_last_layer:    # i.e. last layer and activation_in_last_layer=True
+                x = self.activation_layer(x)
+           
         if self._skip_connection:
             x = torch.sum(torch.stack([x, *xs_skip]), dim=0)
         return x
