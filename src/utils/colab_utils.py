@@ -17,8 +17,8 @@ def download_kaggle_competition_data(api_key_dir: str, competition_name: str, ap
     print(f'Data source import complete; path: \n{data_path}')
     
     # Prepare input directory structure for Kaggle competition data
-    new_data_path = f"./kaggle/input/{competition_name}/"
+    new_data_path = f"/content/kaggle/input/{competition_name}/"
     os.makedirs(new_data_path, exist_ok=True)
-    os.system(f"mv {data_path} ./kaggle/input/")
+    os.system(f"mv {data_path} /content/kaggle/input/")
     
     return new_data_path
