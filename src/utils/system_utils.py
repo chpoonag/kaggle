@@ -6,7 +6,7 @@ import torch
 import nvidia_smi
 from typing import Literal
 
-def send_bash_cmd(cmd):
+def run_bash_cmd(cmd):
     """Execute a bash command and return the result."""
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     if result.returncode != 0:
@@ -62,4 +62,5 @@ def get_system_usage(device: int = 0):
         ret[f'gpu_nvidia_smi_{device}_used'] = info.used
 
     return ret
+
 
