@@ -20,13 +20,13 @@ def get_notebook_env()-> Literal['colab', 'kaggle', 'jupyter', 'other']:
     Detect notebook environment: Colab, Kaggle, Jupyter, or other.
     Returns: 'colab' | 'kaggle' | 'jupyter' | 'other'
     """
+    # Kaggle [web:654 adapted]
+    if os.path.exists('/kaggle') and 'KAGGLE_KERNEL_RUN_TYPE' in os.environ:
+        return 'kaggle'
+        
     # Google Colab [web:654]
     if 'google.colab' in sys.modules and os.getenv('COLAB_RELEASE_TAG'):
         return 'colab'
-    
-    # Kaggle [web:654 adapted]
-    if os.path.exists('/kaggle/input') and 'KAGGLE_KERNEL_RUN_TYPE' in os.environ:
-        return 'kaggle'
     
     # Jupyter/JupyterLab [web:660]
     try:
@@ -62,5 +62,6 @@ def get_system_usage(device: int = 0):
         ret[f'gpu_nvidia_smi_{device}_used'] = info.used
 
     return ret
+
 
 
