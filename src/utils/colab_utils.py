@@ -22,4 +22,5 @@ def download_kaggle_competition_data(api_key_dir: str, competition_name: str, is
         os.makedirs(new_data_path, exist_ok=True)
         os.system(f"mv {data_path} {dst_dir}")
         print(f'New data path: \n{new_data_path}')
-    return new_data_path
+        data_path = new_data_path
+    return data_path
