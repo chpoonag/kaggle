@@ -42,3 +42,55 @@ def setup_kaggle(kaggle_secrets_name=None, credential_path=None):
     except Exception as e:
         print(f"❌ Authentication failed: {str(e)}")
         return None
+
+def download_and_copy_kernel_files(
+    username: str, 
+    notebook_name: str, 
+    version: int = None,
+    all_nb_dst_path: str = None, 
+    verbose: bool = True
+):
+    """
+    Download Kaggle notebook files and optionally copy to custom destination.
+    
+    Downloads all files from a Kaggle notebook using username/notebook_name/version.
+    
+    Args:
+        username (str): Kaggle username
+        notebook_name (str): Notebook name
+        version (str, optional): Version number. Uses latest if None.
+        all_nb_dst_path (str, optional): Custom destination directory.
+        verbose (bool): Print progress messages.
+    
+    Returns:
+        str: Path to downloaded notebook files.
+        
+    Example:
+        >>> download_and_copy_kernel_files("john", "my-model", "1")
+        >>> download_and_copy_kernel_files("john", "my-model")  # latest version
+    """
+    import kagglehub
+    import shutil
+    # import os
+    
+    # Build kernel_path automatically
+    kernel_path = f"{username}/{notebook_name}"
+    if version is not None:
+        kernel_path += f"/versions/{version}"
+
+    if verbose: print(f"Downloading {kernel_path}...")
+    nb_files_path = kagglehub.notebook_output_download(
+        kernel_path, 
+        force_download=False
+    )
+    dst_path = nb_files_path
+    
+    if all_nb_dst_path is not None:
+        dst_path = os.path.join(all_nb_dst_path, f"{username}/{notebook_name}")
+        shutil.copytree(
+            nb_files_path, 
+            dst_path,
+            dirs_exist_ok=True
+        )
+    if verbose: print(f"Path : {dst_path}")    
+    return dst_path
