@@ -3,7 +3,7 @@ import sys
 import subprocess
 import psutil
 import torch
-import nvidia_smi
+# import nvidia_smi
 from typing import Literal
 
 def run_bash_cmd(cmd):
@@ -43,6 +43,7 @@ def enable_cpu_affinity(cpu_ids: list):
     psutil.Process(pid).cpu_affinity(cpu_ids)
 
 def get_system_usage(device: int = 0):
+    import nvidia_smi
     # CPU
     cpu_percentage = psutil.cpu_percent()
     # RAM
@@ -62,6 +63,7 @@ def get_system_usage(device: int = 0):
         ret[f'gpu_nvidia_smi_{device}_used'] = info.used
 
     return ret
+
 
 
 
