@@ -5,6 +5,31 @@ import psutil
 import torch
 # import nvidia_smi
 from typing import Literal
+# import socket
+
+def has_internet(timeout: float = 3.0) -> bool:
+    """
+    Check if internet connection is available.
+    
+    Pings Google DNS (8.8.8.8:53) with configurable timeout.
+    
+    Args:
+        timeout (float): Connection timeout in seconds. Defaults to 3.0.
+        
+    Returns:
+        bool: True if internet available, False otherwise.
+        
+    Example:
+        >>> has_internet()                    # 3s timeout
+        >>> has_internet(timeout=1.0)         # 1s timeout
+        >>> if has_internet(2.0): print("ON")
+    """
+    import socket
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=timeout).close()
+        return True
+    except:
+        return False
 
 def run_bash_cmd(cmd):
     """Execute a bash command and return the result."""
@@ -63,6 +88,7 @@ def get_system_usage(device: int = 0):
         ret[f'gpu_nvidia_smi_{device}_used'] = info.used
 
     return ret
+
 
 
 
