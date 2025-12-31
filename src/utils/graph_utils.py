@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from dict_utils import iterate_nested_dict
+from .dict_utils import iterate_nested_dict
 
 def get_degree_stats(graphs, use_tqdm=False, degree_type='deg'):
     """
@@ -86,3 +86,4 @@ def get_canonical_etypes_set(all_hetero_graphs):
     for g in all_hetero_graphs:
         canonical_etypes_set = canonical_etypes_set.union(set(g.canonical_etypes))
     return canonical_etypes_set
+
