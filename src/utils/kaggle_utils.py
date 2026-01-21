@@ -83,14 +83,26 @@ def download_and_copy_kernel_files(
         kernel_path, 
         force_download=False
     )
+
     dst_path = nb_files_path
-    
     if all_nb_dst_path is not None:
         dst_path = os.path.join(all_nb_dst_path, f"{username}/{notebook_name}")
-        shutil.copytree(
-            nb_files_path, 
-            dst_path,
-            dirs_exist_ok=True
-        )
+        if not(version is None):
+            # correction of dst_path: include version
+            dst_path = os.path.join(dst_path, f"versions/{version}")
+        try:
+            shutil.copytree(
+                nb_files_path, 
+                dst_path,
+                dirs_exist_ok=False
+            )
+        except Exception as e:
+            print(f"*** Exception *** : {e}")
+            shutil.copytree(
+                nb_files_path, 
+                dst_path,
+                dirs_exist_ok=True
+            )
+            
     if verbose: print(f"Path : {dst_path}")    
     return dst_path
