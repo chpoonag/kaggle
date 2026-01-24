@@ -1,5 +1,5 @@
 import os
-import pickle
+import pickle, joblib
 from typing import Literal
 
 def folder_structure_to_list(path, max_depth=10, depth=0, list_folders_only=True):
@@ -190,6 +190,7 @@ def load_object(file_path):
         else:
             raise ValueError(f"Unexpected file extension '{ext}'. Use .pkl, .pickle, or .joblib.")
     return obj
+
 
 
 
