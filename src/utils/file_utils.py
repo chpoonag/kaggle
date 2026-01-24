@@ -1,5 +1,6 @@
 import os
 import pickle
+from typing import Literal
 
 def folder_structure_to_list(path, max_depth=10, depth=0, list_folders_only=True):
     """
@@ -75,32 +76,45 @@ def folder_structure_to_dict(path, max_depth=10, depth=0, list_folders_only=True
 
     return {name: children}
 
-def get_folder_size(folder_path):
+def get_folder_size(
+    folder_path: str,
+    unit: Literal["b", "kb", "mb", "gb", "kib", "mib", "gib"] = "b",
+) -> float:
     """
     Calculate the total size of a folder (including all files and subdirectories).
 
     Args:
         folder_path (str): Path to the folder.
+        unit (str): One of "b", "kb", "mb", "gb", "kib", "mib", "gib". 
+                   kb/mb/gb use 1000 base, kib/mib/gib use 1024 base. Defaults to "b" (bytes).
 
     Returns:
-        int: Total size of the folder in bytes.
+        float: Total size of the folder in the requested unit.
     """
+    unit = unit.lower()
+    factor_map = {
+        "b": 1,
+        "kb": 1000,
+        "mb": 1000 ** 2,
+        "gb": 1000 ** 3,
+        "kib": 1024,
+        "mib": 1024 ** 2,
+        "gib": 1024 ** 3,
+    }
     total_size = 0
-
-    # Walk through all files and subdirectories in the folder
     for dirpath, dirnames, filenames in os.walk(folder_path):
         for filename in filenames:
-            # Get the full path of the file
             file_path = os.path.join(dirpath, filename)
-
-            # Add the file size to the total size
             try:
                 total_size += os.path.getsize(file_path)
             except FileNotFoundError:
                 # Skip files that no longer exist (e.g., broken symbolic links)
                 continue
 
-    return total_size
+    if unit not in factor_map:
+        raise ValueError(f"Unsupported unit: {unit!r}. Use 'b', 'kb', 'mb', 'gb', 'kib', 'mib', or 'gib'.")
+
+    return total_size / factor_map[unit]
 
 def create_directory_if_not_exists(directory):
     """
@@ -144,3 +158,4 @@ def load_object(file_path):
         obj = pickle.load(file)
 
     return obj
+
