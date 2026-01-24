@@ -132,30 +132,64 @@ def create_directory_if_not_exists(directory):
 
 def save_object(obj, file_path):
     """
-    Save a Python object to a file using pickle serialization.
+    Save a Python object to a file using appropriate serialization method based on extension.
     
-    Parameters:
-    obj (any): The Python object to save.
-    file_path (str): The file path to save the object to.
-
+    Automatically detects format from file extension (.pkl, .pickle, .joblib) and uses
+    pickle for standard serialization or joblib for large numpy/scipy objects.
+    
+    Args:
+        obj: The Python object to save (any picklable/joblib-compatible type)
+        file_path (str): Path to save file. Extension determines serializer:
+                        - .pkl, .pickle → pickle.dump()
+                        - .joblib → joblib.dump()
+    
+    Raises:
+        ValueError: If file extension is not 'pkl', 'pickle', or 'joblib'
+        pickle.PickleError: If object cannot be serialized
+        OSError: If file cannot be written
+    
     Returns:
-    None
+        None
     """
+    ext = file_path.split(".")[-1]
     with open(file_path, 'wb') as file:
-        pickle.dump(obj, file)
-        
+        if ext in ['pkl', 'pickle']:
+            pickle.dump(obj, file)
+        elif ext in ['joblib']:
+            joblib.dump(obj, file)
+        else:
+            raise ValueError(f"Unexpected file extension '{ext}'. Use .pkl, .pickle, or .joblib.")
+
 def load_object(file_path):
     """
-    Load a Python object from a file using pickle deserialization.
+    Load a Python object from a file using appropriate deserialization method.
     
-    Parameters:
-    file_path (str): The file path from which to load the object.
+    Automatically detects format from file extension (.pkl, .pickle, .joblib) and uses
+    pickle for standard deserialization or joblib for large numpy/scipy objects.
+    
+    Args:
+        file_path (str): Path to load file. Extension determines deserializer:
+                        - .pkl, .pickle → pickle.load()
+                        - .joblib → joblib.load()
+    
+    Raises:
+        ValueError: If file extension is not 'pkl', 'pickle', or 'joblib'
+        pickle.UnpicklingError: If file is corrupted/invalid pickle
+        FileNotFoundError: If file_path does not exist
+        OSError: If file cannot be read
     
     Returns:
-    obj (any): The loaded Python object.
+        The deserialized Python object (original type preserved)
     """
+    ext = file_path.split(".")[-1]
     with open(file_path, 'rb') as file:
-        obj = pickle.load(file)
-
+        if ext in ['pkl', 'pickle']:
+            obj = pickle.load(file)
+        elif ext in ['joblib']:
+            obj = joblib.load(file)
+        else:
+            raise ValueError(f"Unexpected file extension '{ext}'. Use .pkl, .pickle, or .joblib.")
     return obj
+
+
 
