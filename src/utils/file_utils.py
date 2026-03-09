@@ -2,6 +2,38 @@ import os
 import pickle, joblib
 from typing import Literal
 
+import io
+import msoffcrypto
+import pandas as pd
+
+def read_protected_excel(path: str, password: str, **read_excel_kwargs) -> pd.DataFrame:
+    """
+    Decrypt a password-protected Excel file and read it into a pandas DataFrame.
+
+    Parameters
+    ----------
+    path : str
+        Path to the password-protected .xlsx file.
+    password : str
+        Password for the Excel file.
+    read_excel_kwargs :
+        Extra keyword args passed to pandas.read_excel (sheet_name, dtype, etc.).
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    decrypted_buffer = io.BytesIO()
+
+    with open(path, "rb") as f:
+        office_file = msoffcrypto.OfficeFile(f)
+        office_file.load_key(password=password)
+        office_file.decrypt(decrypted_buffer)
+
+    decrypted_buffer.seek(0)  # ensure buffer is at start
+    df = pd.read_excel(decrypted_buffer, **read_excel_kwargs)
+    return df
+
 def folder_structure_to_list(path, max_depth=10, depth=0, list_folders_only=True):
     """
     Recursively builds a nested list representing the folder structure.
@@ -190,6 +222,7 @@ def load_object(file_path):
         else:
             raise ValueError(f"Unexpected file extension '{ext}'. Use .pkl, .pickle, or .joblib.")
     return obj
+
 
 
 
